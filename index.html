@@ -1,0 +1,203 @@
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>Windows 98</title>
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<style>
+*{box-sizing:border-box;user-select:none}
+html,body{margin:0;height:100%;overflow:hidden;background:#008080;font:11px Tahoma,Arial,sans-serif;color:#000}
+.raised,.win,button.b,.bt,#tk,#sm{border:2px solid;border-color:#fff #404040 #404040 #fff;box-shadow:inset -1px -1px #808080,inset 1px 1px #dfdfdf}
+.sunk{border:2px solid;border-color:#808080 #fff #fff #808080;box-shadow:inset 1px 1px #404040}
+button.b{background:#c0c0c0;font:11px Tahoma,Arial;padding:3px 10px;min-width:60px}
+button.b:active,.bt:active,.tbtn.on{border-color:#404040 #fff #fff #404040;box-shadow:inset 1px 1px #808080}
+.win{position:absolute;background:#c0c0c0;padding:2px;display:flex;flex-direction:column;min-width:150px}
+.win.max{left:0!important;top:0!important;width:100%!important;height:calc(100% - 30px)!important}
+.tb{background:linear-gradient(90deg,#000080,#1084d0);color:#fff;font-weight:bold;padding:2px 3px;display:flex;align-items:center;gap:2px;touch-action:none}
+.win.ina .tb{background:linear-gradient(90deg,#808080,#b5b5b5)}
+.tb span{flex:1;overflow:hidden;white-space:nowrap}
+.bt{width:17px;height:15px;font:bold 10px/11px Arial;text-align:center;background:#c0c0c0;color:#000}
+.body{flex:1;overflow:auto;margin-top:2px;position:relative;min-height:0}
+#desk{position:absolute;inset:0 0 30px 0}
+.ic{position:absolute;width:76px;text-align:center;color:#fff;font-size:11px;padding:2px}
+.ic i{display:block;font-style:normal;font-size:30px}
+.ic.sel span{background:#000080;outline:1px dotted #ff0}
+#tk{position:fixed;left:0;right:0;bottom:0;height:30px;background:#c0c0c0;display:flex;align-items:center;gap:3px;padding:2px;z-index:99999}
+.tbtn{height:24px;max-width:140px;min-width:40px;flex:0 1 140px;overflow:hidden;white-space:nowrap;text-align:left;background:#c0c0c0;font:11px Tahoma;border:2px solid;border-color:#fff #404040 #404040 #fff;padding:0 4px}
+#tray{margin-left:auto;padding:3px 8px;display:flex;gap:8px;align-items:center;height:24px}
+#sm{position:fixed;left:2px;bottom:30px;width:180px;background:#c0c0c0;display:none;z-index:99998;padding:2px 2px 2px 26px}
+#sm:before{content:"Windows 98";position:absolute;left:0;top:0;bottom:0;width:24px;background:linear-gradient(0deg,#000080,#1084d0);color:#c0c0c0;font:bold 16px Arial;writing-mode:vertical-rl;transform:rotate(180deg);text-align:left;padding:4px}
+.mi{padding:7px 6px;display:flex;gap:8px;position:relative}.mi:hover{background:#000080;color:#fff}
+.sub{display:none;position:absolute;left:100%;bottom:-2px;width:170px;background:#c0c0c0;border:2px solid;border-color:#fff #404040 #404040 #fff;color:#000}
+.mi.open>.sub{display:block}
+#boot{position:fixed;inset:0;z-index:999999;display:none}
+.blue{background:#0000aa;color:#fff;font:15px monospace;padding:20px;height:100%;white-space:pre-wrap}
+.bar{height:18px;background:#fff;padding:2px;display:flex}.bar div{background:#000080;width:0%}
+.grid{display:grid;grid-template-columns:repeat(9,22px);gap:0}
+.cell{width:22px;height:22px;background:#c0c0c0;border:2px solid;border-color:#fff #808080 #808080 #fff;font:bold 12px/18px Arial;text-align:center}
+.cell.o{border:1px solid #808080;border-color:#808080}
+.cg{display:grid;grid-template-columns:repeat(4,1fr);gap:4px}
+.shake .ic{animation:sh .3s infinite}
+@keyframes sh{50%{transform:translate(3px,-2px) rotate(2deg)}}
+.shake #desk{animation:hue 6s infinite linear}@keyframes hue{to{filter:hue-rotate(360deg)}}
+.pg{padding:8px;font:13px "Times New Roman",serif;background:#fff;min-height:100%;user-select:text}
+.pg a{color:#00e;text-decoration:underline;cursor:pointer}
+.bl{animation:bl 1s steps(2) infinite}@keyframes bl{50%{opacity:0}}
+@media(max-width:600px){.tbtn{flex:0 1 60px}}
+:root{padding-top:env(safe-area-inset-top,0)}
+</style></head><body>
+<div id="desk"></div>
+<div id="tk"><button class="b" id="st" style="min-width:60px;font-weight:bold;padding:2px 6px">🪟 Start</button><span class="sunk" id="ql" style="padding:2px 4px;white-space:nowrap;cursor:pointer;font-size:16px"><span data-r="ie">🌐</span> <span data-r="dos">⬛</span> <span data-r="skipe">📞</span></span><div id="tasks" style="display:flex;gap:3px;flex:1;overflow:hidden"></div><div id="tray" class="sunk"><span id="av" title="FakeAV 98" style="cursor:pointer">🛡️</span><span id="clk"></span></div></div>
+<div id="sm"></div>
+<div id="boot"></div>
+<script>
+const $=s=>document.querySelector(s),H=h=>{const d=document.createElement('div');d.innerHTML=h;return d},R=a=>a[Math.random()*a.length|0];
+let user='User',z=10,inf=0,tm=[],cnt=0,online=0;
+// ---------- window manager ----------
+function win(o){
+ const d=H(`<div class="tb"><span>${o.i} ${o.t}</span>${o.nm?'':'<b class="bt" data-a="m">_</b><b class="bt" data-a="M">□</b>'}<b class="bt" data-a="x">×</b></div><div class="body"></div>`);
+ const w=document.createElement('div');w.className='win';
+ const W=Math.min(o.w,innerWidth-6),n=document.querySelectorAll('.win').length;
+ w.style.cssText=`width:${W}px;height:${o.h}px;left:${o.x??Math.max(2,(innerWidth-W)/2-60+n%6*22)}px;top:${o.y??30+n%6*22}px;z-index:${++z}`;
+ while(d.firstChild)w.appendChild(d.firstChild);
+ const body=w.querySelector('.body');body.appendChild(o.b);
+ let btn;if(!o.nb){btn=document.createElement('button');btn.className='tbtn';btn.textContent=o.i+' '+o.t;$('#tasks').appendChild(btn);
+  btn.onclick=()=>{w.style.display==='none'||w.classList.contains('ina')?(w.style.display='',focus(w)):(w.style.display='none',btn.classList.remove('on'))}}
+ w.close=()=>{w.remove();btn&&btn.remove();o.onclose&&o.onclose()};
+ w.onpointerdown=()=>focus(w);
+ w.querySelectorAll('.bt').forEach(b=>b.onclick=e=>{e.stopPropagation();const a=b.dataset.a;a=='x'?w.close():a=='m'?(w.style.display='none',btn&&btn.classList.remove('on')):w.classList.toggle('max')});
+ const tb=w.querySelector('.tb');let dx,dy,dr=0;
+ tb.onpointerdown=e=>{if(e.target.dataset.a||w.classList.contains('max'))return;dr=1;dx=e.clientX-w.offsetLeft;dy=e.clientY-w.offsetTop;tb.setPointerCapture(e.pointerId)};
+ tb.onpointermove=e=>{if(dr){w.style.left=e.clientX-dx+'px';w.style.top=Math.max(0,e.clientY-dy)+'px'}};
+ tb.onpointerup=()=>dr=0;
+ $('#desk').appendChild(w);focus(w);return w}
+function focus(w){document.querySelectorAll('.win').forEach(x=>{x.classList.add('ina')});w.classList.remove('ina');w.style.zIndex=++z;
+ document.querySelectorAll('.tbtn').forEach(b=>b.classList.remove('on'));const i=[...document.querySelectorAll('.win')].filter(x=>!x.classList.contains('pop')||1);
+ const t=[...document.querySelectorAll('.tbtn')];const wl=[...document.querySelectorAll('.win')].filter(x=>x.dataset.tb!=='0');}
+function msg(t,x,i='ℹ️',cb){const b=H(`<div style="padding:10px;display:flex;gap:10px;align-items:center"><span style="font-size:28px">${i}</span><div style="flex:1;user-select:text">${x}</div></div><div style="text-align:center;padding-bottom:8px"><button class="b">OK</button></div>`);
+ const w=win({t,i:'',w:300,h:130,nb:1,nm:1,b});w.style.height='auto';b.querySelector('button').onclick=()=>{w.close();cb&&cb()};return w}
+// ---------- desktop ----------
+const icons=[['💻','My Computer','comp'],['🗑️','Recycle Bin','bin'],['🌐','Internet Explorer','ie'],['📝','Notepad','note'],['⬛','MS-DOS Prompt','dos'],['💣','Minesweeper','mines'],['🎨','Paint','paint'],['💿','FREE_SCREENSAVER.EXE','virus'],['📞','Skipe','skipe'],['✈️','Felegram','felegram'],['🔍','Finder','finder']];
+let last=0,lastI;
+function desktop(){const d=$('#desk');d.innerHTML='';icons.forEach((c,k)=>{const e=H(`<div class="ic" style="left:${8+(k>>2)*84}px;top:${8+(k%4)*76}px"><i>${c[0]}</i><span>${c[1]}</span></div>`).firstChild;
+ e.onclick=ev=>{ev.stopPropagation();document.querySelectorAll('.ic').forEach(x=>x.classList.remove('sel'));e.classList.add('sel');if(lastI==k&&Date.now()-last<600)run(c[2]);last=Date.now();lastI=k};d.appendChild(e)});
+ d.onclick=()=>{document.querySelectorAll('.ic').forEach(x=>x.classList.remove('sel'));$('#sm').style.display='none'}}
+const menu=[['🗂️','Programs',[['🌐','Internet Explorer','ie'],['📝','Notepad','note'],['🎨','Paint','paint'],['🧮','Calculator','calc'],['💣','Minesweeper','mines'],['⬛','MS-DOS Prompt','dos'],['🛡️','FakeAV 98','av'],['📞','Skipe','skipe'],['✈️','Felegram','felegram'],['🔍','Finder','finder']]],['📄','Documents','comp'],['⚙️','Settings','ctl'],['🔍','Find','find'],['❓','Help','help'],['▶️','Run...','runb'],['⏻','Shut Down...','shut']];
+function buildMenu(){const m=$('#sm');m.innerHTML='';menu.forEach(it=>{const e=H(`<div class="mi"><span>${it[0]}</span>${it[1]}${it[2]&&typeof it[2]!='string'?' ▸':''}</div>`).firstChild;
+ if(typeof it[2]!='string'){const s=H('<div class="sub"></div>').firstChild;it[2].forEach(x=>{const y=H(`<div class="mi"><span>${x[0]}</span>${x[1]}</div>`).firstChild;y.onclick=ev=>{ev.stopPropagation();m.style.display='none';run(x[2])};s.appendChild(y)});e.appendChild(s);e.onclick=ev=>{ev.stopPropagation();e.classList.toggle('open')}}
+ else e.onclick=()=>{m.style.display='none';run(it[2])};m.appendChild(e)})}
+$('#st').onclick=e=>{e.stopPropagation();const m=$('#sm');m.style.display=m.style.display=='block'?'none':'block'};
+$('#av').onclick=()=>run('av');
+setInterval(()=>{$('#clk').textContent=new Date().toLocaleTimeString([],{hour:'numeric',minute:'2-digit'})},1000);
+function run(a){if(app[a])app[a]();else msg('Windows 98','This feature is not available in this demo.','ℹ️')}
+// ---------- apps ----------
+const app={};
+app.note=()=>{const t=document.createElement('textarea');t.style.cssText='width:100%;height:100%;border:0;resize:none;font:13px "Courier New",monospace;outline:0;user-select:text';win({t:'Untitled - Notepad',i:'📝',w:420,h:300,b:t});t.focus()};
+app.comp=()=>{const b=H('<div style="background:#fff;height:100%;padding:8px;display:flex;flex-wrap:wrap;gap:12px;align-content:flex-start"></div>');
+ [['💾','3½ Floppy (A:)'],['🖴','Local Disk (C:)'],['💿','CD-ROM (D:)'],['⚙️','Control Panel'],['🖨️','Printers']].forEach(x=>{const e=H(`<div style="width:72px;text-align:center"><div style="font-size:30px">${x[0]}</div>${x[1]}</div>`).firstChild;
+  e.ondblclick=e.onclick=()=>x[1].startsWith('Local')?folder():msg('My Computer',x[1].startsWith('3')?'A:\\ is not accessible. The device is not ready.':'Nothing to see here.',x[1].startsWith('3')?'⚠️':'ℹ️');b.firstChild&&b.appendChild(e)});win({t:'My Computer',i:'💻',w:360,h:220,b})};
+function folder(){const b=H('<div style="background:#fff;height:100%;padding:6px;font-family:monospace;user-select:text"></div>');
+ [['📁','WINDOWS'],['📁','Program Files'],['📁','My Documents'],['📄','AUTOEXEC.BAT'],['📄','CONFIG.SYS'],['💿','FREE_SCREENSAVER.EXE']].forEach(x=>{const e=H(`<div style="padding:4px;cursor:default">${x[0]} ${x[1]}</div>`).firstChild;e.ondblclick=()=>x[1].includes('.EXE')?virus():msg(x[1],'Cannot open this item in the demo.','ℹ️');b.appendChild(e)});win({t:'C:\\',i:'🖴',w:340,h:240,b})}
+app.bin=()=>win({t:'Recycle Bin',i:'🗑️',w:300,h:160,b:H('<div style="background:#fff;height:100%;padding:10px">The Recycle Bin is empty.</div>')});
+app.ctl=()=>msg('Control Panel','Display, Mouse, Modem, and 14 other settings. (Not really.)','⚙️');
+app.find=()=>msg('Find','Searching C:\\ ... found 0 files. Have you tried turning it off and on again?','🔍');
+app.help=()=>msg('Windows Help','Double-click icons to open them. Tap 🛡️ in the tray to run the antivirus.','❓');
+app.runb=()=>{const i=document.createElement('input');const b=H('<div style="padding:10px">Type the name of a program:<br><br></div>');i.style.width='100%';b.appendChild(i);i.onkeydown=e=>{if(e.key=='Enter'){const v=i.value.toLowerCase().trim();w.close();const m={notepad:'note',calc:'calc',paint:'paint',command:'dos',iexplore:'ie',winmine:'mines'};m[v]?run(m[v]):msg('Run','Cannot find "'+v+'".','⚠️')}};const w=win({t:'Run',i:'▶️',w:320,h:120,nb:1,b});i.focus()};
+app.shut=()=>{const b=H('<div style="padding:12px">What do you want the computer to do?<br><br><label><input type="radio" name="s" checked> Shut down</label><br><label><input type="radio" name="s"> Restart</label><br><br><button class="b" id="ok">OK</button></div>');const w=win({t:'Shut Down Windows',i:'⏻',w:280,h:170,nb:1,b});
+ b.querySelector('#ok').onclick=()=>{const r=b.querySelectorAll('input')[1].checked;w.close();clean();document.querySelectorAll('.win').forEach(x=>x.close());$('#boot').style.display='block';$('#boot').innerHTML=`<div class="blue" style="background:#000;color:#ff8c00;display:flex;align-items:center;justify-content:center;text-align:center;font-size:18px" id="off">${r?'Restarting...':"It's now safe to turn off\nyour computer.\n\n(click to turn on)"}</div>`;r?setTimeout(()=>splash(),1200):$('#off').onclick=()=>splash()}};
+app.calc=()=>{let e='';const b=H('<div style="padding:6px"><div class="sunk" id="d" style="text-align:right;padding:4px;font:16px monospace;background:#fff;margin-bottom:6px">0</div><div class="cg"></div></div>');const d=b.querySelector('#d'),g=b.querySelector('.cg');
+ ['7','8','9','/','4','5','6','*','1','2','3','-','0','.','=','+','C'].forEach(k=>{const x=document.createElement('button');x.className='b';x.style.minWidth=0;x.textContent=k;if(k=='C')x.style.gridColumn='span 4';x.onclick=()=>{if(k=='C')e='';else if(k=='=')try{e=String(Function('return '+e)())}catch{e='Error'}else{if(e=='Error')e='';e+=k}d.textContent=e||'0'};g.appendChild(x)});win({t:'Calculator',i:'🧮',w:210,h:230,b})};
+app.paint=()=>{const c=document.createElement('canvas');c.width=500;c.height=300;c.style.cssText='background:#fff;touch-action:none;display:block';const x=c.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,500,300);let col='#000',dn=0;
+ const b=H('<div style="display:flex;flex-direction:column;height:100%"><div id="p" style="display:flex;gap:2px;padding:3px;flex-wrap:wrap;align-items:center"></div><div class="sunk" style="flex:1;overflow:auto;background:#808080"></div></div>');
+ ['#000','#fff','#f00','#0a0','#00f','#ff0','#f0f','#0ff','#f80','#840'].forEach(k=>{const s=H(`<div class="sunk" style="width:20px;height:20px;background:${k}"></div>`).firstChild;s.onclick=()=>col=k;b.querySelector('#p').appendChild(s)});
+ const cl=H('<button class="b" style="min-width:0">Clear</button>').firstChild;cl.onclick=()=>{x.fillStyle='#fff';x.fillRect(0,0,500,300)};b.querySelector('#p').appendChild(cl);b.querySelector('.sunk').appendChild(c);
+ const pt=e=>{const r=c.getBoundingClientRect();return[e.clientX-r.left,e.clientY-r.top]};
+ c.onpointerdown=e=>{dn=1;c.setPointerCapture(e.pointerId);x.beginPath();x.moveTo(...pt(e))};c.onpointermove=e=>{if(dn){x.strokeStyle=col;x.lineWidth=col=='#fff'?14:3;x.lineCap='round';x.lineTo(...pt(e));x.stroke()}};c.onpointerup=()=>dn=0;
+ win({t:'untitled - Paint',i:'🎨',w:380,h:300,b})};
+app.mines=()=>{const N=9,M=10;let cells,over,first,flag=0;const b=H('<div style="padding:6px"><div class="sunk" style="padding:3px;margin-bottom:6px;display:flex;justify-content:space-between;align-items:center"><button class="b" id="f" style="min-width:30px">🙂</button><label><input type="checkbox" id="fl"> 🚩 flag mode</label></div><div class="grid sunk"></div></div>');const g=b.querySelector('.grid');
+ b.querySelector('#fl').onchange=e=>flag=e.target.checked;
+ const nb=i=>{const r=[],x=i%N,y=i/N|0;for(let a=-1;a<2;a++)for(let c=-1;c<2;c++){const X=x+c,Y=y+a;if((a||c)&&X>=0&&X<N&&Y>=0&&Y<N)r.push(Y*N+X)}return r};
+ const draw=()=>cells.forEach((c,i)=>{const e=g.children[i];e.className='cell'+(c.o?' o':'');e.textContent=c.o?(c.m?'💣':c.n||''):c.f?'🚩':'';if(c.o&&c.n&&!c.m)e.style.color=['','#00f','#080','#f00','#008','#800','#088','#000','#888'][c.n]});
+ const reveal=i=>{const c=cells[i];if(c.o||c.f)return;c.o=1;if(c.m){over=1;cells.forEach(x=>x.m&&(x.o=1));$('#f',b)&&0;b.querySelector('#f').textContent='😵';return}if(!c.n)nb(i).forEach(reveal)};
+ const init=s=>{cells=Array.from({length:N*N},()=>({m:0,o:0,f:0,n:0}));let k=0;while(k<M){const i=Math.random()*81|0;if(i!=s&&!cells[i].m){cells[i].m=1;k++}}cells.forEach((c,i)=>c.n=nb(i).filter(j=>cells[j].m).length)};
+ const reset=()=>{over=0;first=1;cells=Array.from({length:81},()=>({m:0,o:0,f:0,n:0}));g.innerHTML='';for(let i=0;i<81;i++){const e=document.createElement('div');e.className='cell';e.onclick=()=>{if(over)return;if(flag){cells[i].f=!cells[i].f}else{if(first){init(i);first=0}reveal(i);if(!over&&cells.every(c=>c.m||c.o))b.querySelector('#f').textContent='😎'}draw()};e.oncontextmenu=ev=>{ev.preventDefault();cells[i].f=!cells[i].f;draw()};g.appendChild(e)}b.querySelector('#f').textContent='🙂'};
+ b.querySelector('#f').onclick=reset;reset();win({t:'Minesweeper',i:'💣',w:230,h:320,b})};
+app.dos=()=>{const o=H('<div style="background:#000;color:#c0c0c0;font:13px monospace;height:100%;padding:4px;overflow:auto;white-space:pre-wrap;user-select:text">Microsoft(R) Windows 98\n   (C)Copyright Microsoft Corp 1981-1998.\n\n</div>');const l=H('<div style="display:flex">C:\\WINDOWS&gt;<input style="flex:1;background:0;border:0;color:#c0c0c0;font:13px monospace;outline:0"></div>');o.appendChild(l);const i=l.querySelector('input');
+ const say=t=>{l.before(document.createTextNode(t+'\n'))};
+ i.onkeydown=e=>{if(e.key!='Enter')return;const v=i.value.trim(),[c,...r]=v.split(' ');say('C:\\WINDOWS>'+v);i.value='';
+  const m={help:'Commands: dir ver cls date time echo format exit',ver:'Windows 98 [Version 4.10.1998]',date:'Current date is '+new Date().toDateString(),time:'Current time is '+new Date().toLocaleTimeString(),dir:' Volume in drive C is WIN98\n\nSYSTEM       <DIR>\nCOMMAND  COM    93,890\nWIN      COM    22,719\nFREE_SC~1 EXE  666,000\n   3 file(s)',format:'Nice try. This is a fake computer. 😄',echo:r.join(' ')};
+  if(c=='cls')o.querySelectorAll(':scope>:not(div)').forEach(n=>n.remove()),o.firstChild.textContent='';else if(c=='exit')w.close();else if(c)say(m[c.toLowerCase()]??'Bad command or file name')};
+ const w=win({t:'MS-DOS Prompt',i:'⬛',w:460,h:280,b:o});i.focus();o.onclick=()=>i.focus()};
+// ---------- Internet Explorer + fake internet ----------
+function watch(e,t,k){const p=e.closest('.pg').querySelector('#pl');p.innerHTML=`<div style="background:#000;color:#fff;height:150px;display:flex;align-items:center;justify-content:center;font:13px Arial;text-align:center">⏳ Buffering ${t}...<br>(56k modem: est. 3 hours)</div>`;setTimeout(()=>{p.innerHTML=`<div style="background:#000;color:#fff;height:150px;display:flex;align-items:center;justify-content:center;font:13px Arial;text-align:center"><div><div class="bl" style="font-size:40px">${k}</div>▶ ${t}<br><small>Video is 3 pixels wide. Enjoy!</small></div></div>`},2200)}
+const sites={
+'www.younube.com':()=>`<div style="font-family:Arial"><h2><span style="color:#c00">You</span>Nube <small style="color:#888">Broadcast Yourself (in 12 frames)</small></h2><div id="pl"></div><p>Click a video:</p>${[['🐕','Dog Falls Off Couch','1,204 views'],['👶','Dancing Baby Remix','9,999,999 views'],['🎸','Cousin Plays Guitar Out of Tune','12 views'],['🐈','Cat vs Cucumber','88,031 views'],['🚗','Guy Drives Into Pond','4,500 views'],['🕺','Totally Real Moonwalk','301 views']].map(v=>`<div style="display:inline-block;width:110px;vertical-align:top;margin:4px;cursor:pointer;text-align:center" onclick="watch(this,'${v[1]}','${v[0]}')"><div style="background:#ddd;font-size:34px;padding:10px">${v[0]}</div><a>${v[1]}</a><br><small>${v[2]}</small></div>`).join('')}<p><a data-go="home">« Back home</a></p></div>`,
+'www.nickflix.com':()=>`<div style="background:#141414;color:#fff;padding:10px;font-family:Arial"><h1 style="color:#e50914;letter-spacing:2px">NICKFLIX</h1><p>Unlimited DVDs by mail! No late fees!* <small>(*late fees)</small></p>${[['🚀','Space Cowboys of Doom'],['🦖','Dino Mall 2: The Mallening'],['🥷','Ninja Accountant'],['🧙','Wizard School Dropout'],['🤖','Robot Gets a Perm'],['🌵','Desert Taxi']].map(m=>`<div style="display:inline-block;width:120px;margin:6px;vertical-align:top;cursor:pointer" onclick="this.innerHTML+='<br><b style=color:#0f0>✔ Added to queue (ships in 6-8 weeks)</b>'"><div style="background:#333;font-size:36px;text-align:center;padding:12px">${m[0]}</div>${m[1]}</div>`).join('')}<p><a data-go="home" style="color:#9cf">« Back home</a></p></div>`,
+'www.ebai.com':()=>`<div style="font-family:Arial"><h2><span style="color:#e53238">E</span><span style="color:#0064d2">B</span><span style="color:#f5af02">a</span><span style="color:#86b817">i</span> <small>Auctions</small></h2>${[['📼','Rare VHS Tape (Used)',3],['🪆','Beanie Plushie (Mint, Tag On)',45],['💽','Windows 98 CD, Slightly Scratched',12],['📟','Tamagotcha Pet',8]].map(i=>`<div style="border-bottom:1px solid #ccc;padding:6px">${i[0]} ${i[1]} — current bid <b>$${i[2]}</b> <button class="b" onclick="var s=this.parentNode.querySelector('b');s.textContent='$'+(+s.textContent.slice(1)+5)">Bid +$5</button></div>`).join('')}<p><a data-go="home">« Back home</a></p></div>`,
+'www.napstor.com':()=>`<div style="background:#111;color:#fff;padding:10px;font-family:Arial"><h2 style="color:#f90">🐱 Napstor</h2><p>Free music downloads!</p>${['Totally Original Song.mp3','Boy Band Ballad (Remix).mp3','Dial-Up Noise 10hr.mp3'].map(s=>`<div style="padding:5px;cursor:pointer" onclick="this.innerHTML='⏳ Downloading... est. 4 hours. The record label is watching 👀'">🎵 ${s}</div>`).join('')}<p><a data-go="home" style="color:#9cf">« Back home</a></p></div>`,
+'www.neopetz.com':()=>`<div style="background:#cfe;padding:10px;text-align:center;font-family:Comic Sans MS,Arial"><h2>🐾 Neopetz</h2><div id="pt" style="font-size:60px">🐶</div><p id="pm">Your pet is hungry!</p><button class="b" onclick="document.getElementById('pt').textContent='😸';document.getElementById('pm').textContent='Yum! Your pet loves digital pizza.'">🍕 Feed</button> <button class="b" onclick="document.getElementById('pt').textContent='🥱';document.getElementById('pm').textContent='Zzz... pet is sleepy.'">💤 Sleep</button><p><a data-go="home">« Back home</a></p></div>`,
+'www.askjeaves.com':()=>`<div style="text-align:center;font-family:Arial"><h1 style="color:#306">🎩 Ask Jeaves</h1><p>Ask me anything, sir.</p><input size="30"> <button class="b" onclick="this.nextElementSibling.textContent=['I regret to inform you the answer is 42.','Have you tried AltaVista, sir?','Very good, sir, but no.','Indeed. Quite.'][Math.random()*4|0]">Ask</button><p style="font-style:italic"></p><p><a data-go="home">« Back home</a></p></div>`,
+'home':()=>`<h2 style="color:#00a">🌐 MSN Home</h2><p><b>Welcome to the Web!</b> Pick a site:</p><p>• <a data-go="www.altavista.com">AltaVista Search</a><br>• <a data-go="www.geocities.com/~cooldude99">Dave's Cool Homepage</a><br>• <a data-go="www.freeprizes.com">Win FREE Prizes!!!</a><br>• <a data-go="www.news98.com">News98 Headlines</a><br>• <a data-go="www.younube.com">YouNube — videos!</a><br>• <a data-go="www.nickflix.com">Nickflix — DVDs by mail</a><br>• <a data-go="www.ebai.com">EBai Auctions</a><br>• <a data-go="www.napstor.com">Napstor Music</a><br>• <a data-go="www.neopetz.com">Neopetz</a><br>• <a data-go="www.askjeaves.com">Ask Jeaves</a></p>`,
+'www.altavista.com':()=>`<div style="text-align:center"><h1 style="color:#c00;font-size:40px">AltaVista</h1><input id="q" size="30"> <button class="b" id="sq">Search</button><p id="res" style="text-align:left"></p></div>`,
+'www.geocities.com/~cooldude99':()=>`<div style="background:#000;color:#0f0;padding:10px;text-align:center"><marquee>~*~ Welcome to Dave's Cool Homepage ~*~</marquee><h2 class="bl">🚧 UNDER CONSTRUCTION 🚧</h2><p>You are visitor #<b>${String(++cnt+1337).padStart(6,'0')}</b></p><p>My hobbies: Pokémon, Linkin Park, my dog Spike</p><p><a data-go="www.freeprizes.com" style="color:#ff0">Cool link!!</a> | Sign my guestbook</p></div>`,
+'www.news98.com':()=>`<h2>📰 News98</h2><ul><li>Y2K Bug: Are YOU ready?</li><li>New "Windows 98" Released: Experts say it's "fast"</li><li>Local Man Still Waiting for Page To Load</li><li>Dial-up Speeds Hit 56K</li></ul>`,
+'www.freeprizes.com':()=>`<div style="text-align:center;background:#ff0;padding:10px"><h1 class="bl" style="color:#f00">🎉 CONGRATULATIONS!!! 🎉</h1><p>You are the <b>1,000,000th</b> visitor!</p><p>Download your <b>FREE SCREENSAVER</b>!</p><button class="b" data-v="1" style="font-size:14px;padding:8px 18px">⬇ DOWNLOAD NOW</button><p style="font-size:10px">(this is a fake virus, totally harmless)</p></div>`};
+app.ie=()=>{const b=H('<div style="display:flex;flex-direction:column;height:100%"><div style="display:flex;gap:4px;padding:3px;align-items:center">Address <input id="u" style="flex:1;min-width:0" value="home"><button class="b" id="g" style="min-width:36px">Go</button></div><div class="sunk" id="v" style="flex:1;overflow:auto;background:#fff"></div><div id="s" style="padding:2px 4px">Done</div></div>');
+ const v=b.querySelector('#v'),s=b.querySelector('#s'),u=b.querySelector('#u');
+ const go=url=>{url=url.replace(/^https?:\/\//,'').trim()||'home';u.value=url;v.innerHTML='';s.textContent='Opening page '+url+'...';
+  setTimeout(()=>{const f=sites[url]||sites['www.'+url+'.com']||sites['www.'+url];v.innerHTML=`<div class="pg">${f?f():'<h2>The page cannot be displayed</h2><p>Cannot find server or DNS Error.<br>Internet Explorer</p>'}</div>`;s.textContent='Done';
+   v.querySelectorAll('[data-go]').forEach(a=>a.onclick=()=>go(a.dataset.go));const vb=v.querySelector('[data-v]');vb&&(vb.onclick=()=>virus());
+   const sq=v.querySelector('#sq');sq&&(sq.onclick=()=>{const q=v.querySelector('#q').value||'stuff';v.querySelector('#res').innerHTML=`<b>1-3 of 3,412 results for "${q}"</b><br><br><a data-go="www.geocities.com/~cooldude99">${q} - Dave's Cool Homepage</a><br><br><a data-go="www.freeprizes.com">FREE ${q.toUpperCase()}!!! Click here</a><br><br><a data-go="www.news98.com">${q} in the news</a>`;v.querySelectorAll('[data-go]').forEach(a=>a.onclick=()=>go(a.dataset.go))})},400+Math.random()*900)};
+ b.querySelector('#g').onclick=()=>go(u.value);u.onkeydown=e=>e.key=='Enter'&&go(u.value);
+ const w=win({t:'Microsoft Internet Explorer',i:'🌐',w:520,h:380,b});
+ if(online)go('home');else{const d=H('<div style="padding:10px"><b>Dial-up Connection</b><p id="t">Dialing 555-0199...</p><div class="bar"><div id="p"></div></div></div>');const m=win({t:'Connect To',i:'📞',w:300,h:140,nb:1,nm:1,b:d});let p=0;
+  const iv=setInterval(()=>{p+=5;d.querySelector('#p').style.width=p+'%';d.querySelector('#t').textContent=p<30?'Dialing 555-0199... ☎ (beep boop skreeeee)':p<70?'Verifying user name and password...':'Connected at 56000 bps';if(p>=100){clearInterval(iv);m.close();online=1;go('home')}},120)}};
+// ---------- fake virus + antivirus ----------
+app.virus=()=>virus();
+function virus(){if(inf)return;const w=msg('Setup','Installing FREE_SCREENSAVER.EXE ... please wait','⏳');setTimeout(()=>{w.close();chaos()},1800)}
+function chaos(){inf=1;document.body.classList.add('shake');$('#av').textContent='🚨';
+ const m=['WARNING: Your computer has a VIRUS!','Deleting C:\\WINDOWS... just kidding, this is FAKE.','CHERNOBYL.EXE (fake) is eating your RAM','All your base are belong to us','Error 0x0000FAKE: This is a harmless prank','Hard drive 99% full of imaginary cats 🐈','Tap the 🛡️ tray icon to clean me'];
+ const pop=()=>{if(!inf||document.querySelectorAll('.pop').length>22)return;const w=msg('⚠ SYSTEM ERROR',R(m),R(['❌','☠️','⚠️','🦠']),()=>setTimeout(pop,300));w.classList.add('pop');w.style.left=Math.random()*(innerWidth-300)+'px';w.style.top=Math.random()*(innerHeight-200)+'px'};
+ tm.push(setInterval(pop,900),setTimeout(bsod,18000));pop()}
+function bsod(){if(!inf)return;const b=$('#boot');b.style.display='block';b.innerHTML='<div class="blue" style="background:#0000aa;font-size:14px">Windows\n\nA fatal exception 0E has occurred at 0028:C0034B23. The current\napplication will be terminated.\n\n*  FAKE ERROR: nothing on your real computer was harmed.\n*  Press any key or tap to restart Windows.\n\n                 Press any key to continue _</div>';
+ const f=()=>{removeEventListener('keydown',f);b.onclick=null;b.style.display='none';clean();msg('Windows 98','Windows recovered from the fake virus. Phew!','✅')};addEventListener('keydown',f);b.onclick=f}
+function clean(){inf=0;tm.forEach(t=>{clearInterval(t);clearTimeout(t)});tm=[];document.querySelectorAll('.pop').forEach(x=>x.close());document.body.classList.remove('shake');$('#av').textContent='🛡️'}
+app.av=()=>{const b=H('<div style="padding:10px"><b>FakeAV 98</b><p id="t">Click Scan to check your computer for viruses.</p><div class="bar"><div id="p"></div></div><br><button class="b" id="sc">Scan</button></div>');const w=win({t:'FakeAV 98',i:'🛡️',w:320,h:170,b});
+ b.querySelector('#sc').onclick=()=>{let p=0;const iv=setInterval(()=>{p+=4;b.querySelector('#p').style.width=p+'%';b.querySelector('#t').textContent='Scanning C:\\WINDOWS\\SYSTEM\\'+R(['KERNEL32','USER32','GDI32','VMM32'])+'.DLL';if(p>=100){clearInterval(iv);if(inf){clean();b.querySelector('#t').textContent='Found and removed CHERNOBYL.EXE (fake). You are safe!'}else b.querySelector('#t').textContent='No viruses found.'}},80)}};
+// ---------- Skipe / Felegram / Finder ----------
+const AI={
+doris:{n:'Doris',e:'👵',g:30,u:22,hi:'Hello? Who is this, dear? Mind the budgies, they are loud.',r:['Oh my, you sound like such a nice young man.','Hold on, I am looking for my glasses... they are on my head.','My grandson Timmy says never talk to strangers, but you seem polite.','Would you like some soup? I made far too much soup.','What was that, dear? The cat is on the keyboard.'],k:{prize:'A prize?! I never win anything! Except bingo in 1987!',money:'Money? Oh dear, I only have these Monopoly bills and a coupon for pickles.',gift:'A gift card? Is that a Christmas card with extra steps?',password:'My password is... oh, it is on a sticky note. Where did I put that...'}},
+kev:{n:'Kevin from IT',e:'🧑‍💻',g:10,u:10,hi:'IT helpdesk, Kevin speaking. Have you tried turning it off and on again?',r:['Ticket logged. Estimated resolution: 6 to 8 business years.','Please hold. 🎵 elevator music 🎵','That sounds like a PEBKAC error.','I am going to need you to reboot.','Sir, this is a restaurant.'],k:{password:'Nice try. Your password is password123, same as everyone.',urgent:'Everything is urgent. Take a number.',money:'I make 14 dollars an hour. You first.',virus:'Oh, that one? It is fake. Tap the shield. 🛡️'}},
+pem:{n:'Mr. Pembleton',e:'🎩',g:5,u:8,hi:'First National Bank of Nowhere. State your account number and your business, please.',r:['I will need three forms of ID, through the phone.','That is against policy, sir.','Please hold while I consult the manual. It is 4,000 pages.','I sense you are not who you claim to be.','Our records show you owe us one stapler.'],k:{money:'Money is handled on Tuesday, in person, with paperwork.',wire:'Wire transfers require a notarized hamster.',bank:'You are speaking with the bank. That is the one thing I can confirm.',prize:'The bank does not give prizes. Only fees.'}}
+};
+function reply(c,t){t=t.toLowerCase();const h=Object.keys(c.k).find(w=>t.includes(w));const good=/prize|free|urgent|winner|please|help|lottery|grandson|refund|official|madam|sir/.test(t),bad=/give me|idiot|stupid|scam|now!/.test(t);c.g=Math.max(0,Math.min(100,c.g+(good?c.u:0)+(h?6:0)-(bad?15:0)-2));return h?c.k[h]:R(c.r)}
+function chat(key,call){const c={...AI[key]};let sec=0,won=0,iv;
+ const b=H(`<div style='display:flex;flex-direction:column;height:100%;background:#fff'><div style='background:#c0c0c0;padding:3px;display:flex;justify-content:space-between;align-items:center;gap:4px'><span>${c.e} ${c.n} (AI)${call?' <b id=tm>00:00</b> <label><input type=checkbox id=vc> 🔊</label>':''}</span><span>Scam meter <span class=sunk style='display:inline-block;width:60px;height:10px;vertical-align:middle;background:#fff'><i id=mb style='display:block;height:100%;width:0;background:#0a0'></i></span></span></div><div id=lg style='flex:1;overflow:auto;padding:6px;user-select:text;font:12px Arial'></div><div style='display:flex;gap:3px;padding:3px;background:#c0c0c0'><input id=i style='flex:1;min-width:0'><button class=b id=s style='min-width:44px'>Send</button></div></div>`);b.style.height='100%';
+ const lg=b.querySelector('#lg'),inp=b.querySelector('#i');
+ const say=(w,t)=>{lg.insertAdjacentHTML('beforeend',`<div style='margin:3px 0'><b>${w}:</b> ${t}</div>`);lg.scrollTop=1e5;if(call&&w!='You'&&b.querySelector('#vc').checked&&window.speechSynthesis)speechSynthesis.speak(new SpeechSynthesisUtterance(t))};
+ const send=()=>{const t=inp.value.trim().replace(/</g,'&lt;');if(!t)return;inp.value='';say('You',t);setTimeout(()=>{say(c.n,reply(c,t));b.querySelector('#mb').style.width=c.g+'%';if(c.g>=100&&!won){won=1;say('🎉 SYSTEM','SCAM SUCCESS! '+c.n+' sent you $500 in Monopoly money. (Pretend. All characters are fictional AIs.)')}},500+Math.random()*900)};
+ b.querySelector('#s').onclick=send;inp.onkeydown=e=>e.key=='Enter'&&send();
+ win({t:(call?'Skipe call - ':'Felegram - ')+c.n,i:call?'📞':'✈️',w:360,h:320,b,onclose:()=>clearInterval(iv)});
+ if(call)iv=setInterval(()=>{sec++;b.querySelector('#tm').textContent=String(sec/60|0).padStart(2,'0')+':'+String(sec%60).padStart(2,'0')},1000);
+ say(c.n,c.hi);inp.focus()}
+const contacts=(pick,label)=>{const b=H(`<div style='background:#fff;padding:6px'></div>`);b.style.height='100%';b.insertAdjacentHTML('afterbegin',`<div style='font-size:10px;color:#666;padding-bottom:4px'>Fictional AI characters. Try to talk them out of their (pretend) Monopoly money!</div>`);Object.keys(AI).forEach(k=>{const e=H(`<div style='display:flex;align-items:center;gap:8px;padding:6px;border-bottom:1px solid #ddd'><span style='font-size:26px'>${AI[k].e}</span><span style='flex:1'>${AI[k].n} (AI)<br><small style='color:#080'>● online</small></span><button class='b'>${label}</button></div>`).firstChild;e.querySelector('button').onclick=()=>pick(k);b.appendChild(e)});return b};
+app.felegram=()=>win({t:'Felegram',i:'✈️',w:320,h:280,b:contacts(k=>chat(k,0),'Message')});
+app.skipe=()=>win({t:'Skipe',i:'📞',w:320,h:280,b:contacts(k=>{const d=H(`<div style='padding:14px;text-align:center'><div style='font-size:40px'>${AI[k].e}</div>Calling ${AI[k].n}...<br><span class='bl'>☎ ring ring</span></div>`);const r=win({t:'Skipe',i:'📞',w:240,h:150,nb:1,nm:1,b:d});setTimeout(()=>{r.close();chat(k,1)},2200)},'📞 Call')});
+app.finder=()=>{const F=['AUTOEXEC.BAT','CONFIG.SYS','COMMAND.COM','NOTEPAD.EXE','PAINT.EXE','README.TXT','FREE_SCREENSAVER.EXE','SKIPE.EXE','FELEGRAM.EXE','HOMEWORK.TXT','FUNNY_CAT.GIF'],X={'FREE_SCREENSAVER.EXE':virus,'SKIPE.EXE':()=>run('skipe'),'FELEGRAM.EXE':()=>run('felegram'),'NOTEPAD.EXE':()=>run('note'),'PAINT.EXE':()=>run('paint')};
+ const b=H(`<div style='padding:8px'>Named: <input id='q' style='width:140px'> <button class='b' id='f'>Find Now</button><div class='sunk' id='r' style='height:140px;overflow:auto;background:#fff;margin-top:8px;padding:3px'></div><div id='n' style='margin-top:4px'>Ready</div></div>`);
+ b.querySelector('#f').onclick=()=>{const q=b.querySelector('#q').value.toUpperCase(),m=F.filter(f=>f.includes(q)),r=b.querySelector('#r');r.innerHTML='';m.forEach(f=>{const e=H(`<div style='padding:3px 4px;cursor:pointer'>📄 ${f} <small>(in C:)</small></div>`).firstChild;e.onclick=()=>X[f]?X[f]():msg('Finder','Cannot open '+f+' in this demo.','ℹ️');r.appendChild(e)});b.querySelector('#n').textContent=m.length+' file(s) found'};
+ win({t:'Find: All Files',i:'🔍',w:340,h:290,b})};
+app.find=app.finder;
+$('#ql').onclick=e=>e.target.dataset.r&&run(e.target.dataset.r);
+// ---------- setup + boot ----------
+function splash(){const b=$('#boot');b.style.display='block';b.innerHTML='<div style="height:100%;background:linear-gradient(#5aa0e6,#2b64c8 60%,#fff);display:flex;align-items:center;justify-content:center;flex-direction:column;color:#fff;font:italic bold 44px Arial;text-shadow:2px 2px #004;text-align:center">Microsoft<br>Windows<span style="color:#ffd">98</span></div>';
+ setTimeout(()=>{b.style.display='none';start()},2600)}
+function start(){desktop();buildMenu();msg('Welcome to Windows 98','Welcome, <b>'+user+'</b>! Double-click icons to open apps. Be careful with <b>FREE_SCREENSAVER.EXE</b>... it is a (fake) virus. 🛡️ in the tray cleans it.','🪟')}
+function setup(){const b=$('#boot');b.style.display='block';
+ b.innerHTML='<div class="blue" id="s0" style="cursor:pointer">Windows 98 Setup\n=================\n\nWelcome to Setup.\n\nThis portion of Setup prepares Windows 98 to run on your computer.\n\n   • To set up Windows 98 now, press ENTER (or tap).\n   • To quit Setup without installing, press F3.\n\nENTER=Continue  F3=Exit</div>';
+ let go=0;const next=()=>{if(go)return;go=1;removeEventListener('keydown',kd);wiz1()};const kd=e=>e.key=='Enter'&&next();addEventListener('keydown',kd);$('#s0').onclick=next;
+ const frame=(t,h)=>{b.innerHTML=`<div style="height:100%;background:#008080;display:flex;align-items:center;justify-content:center"><div class="win" style="position:static;width:min(400px,96vw)"><div class="tb"><span>${t}</span></div><div style="padding:12px;background:#c0c0c0">${h}</div></div></div>`;return b.querySelector('.win')};
+ function wiz1(){const w=frame('Windows 98 Setup Wizard','<b>License Agreement</b><p style="user-select:text;height:70px;overflow:auto" class="sunk">Microsoft Windows 98 End-User License Agreement. You may install this fake OS on 1 imaginary computer. No real viruses included. Please read carefully (nobody does).</p><label><input type="radio" id="a"> I accept the agreement</label><br><label><input type="radio" checked> I don\'t accept the agreement</label><br><br><div style="text-align:right"><button class="b" id="n">Next &gt;</button></div>');
+  w.querySelector('#n').onclick=()=>w.querySelector('#a').checked?wiz2():alert('You must accept the agreement to continue.')}
+ function wiz2(){const w=frame('Windows 98 Setup Wizard','<b>User Information</b><p>Name: <input id="nm" value="User"><br><br>Product Key: <input value="12345-678-9101112" size="20"></p><div style="text-align:right"><button class="b" id="n">Next &gt;</button></div>');w.querySelector('#n').onclick=()=>{user=w.querySelector('#nm').value||'User';wiz3()}}
+ function wiz3(){const w=frame('Windows 98 Setup Wizard','<b>Copying files...</b><p id="f">Preparing...</p><div class="bar"><div id="p"></div></div><p id="pc">0%</p>');let p=0;
+  const iv=setInterval(()=>{p+=1.2;w.querySelector('#p').style.width=Math.min(p,100)+'%';w.querySelector('#pc').textContent=Math.min(p|0,100)+'% complete';w.querySelector('#f').textContent=(p<70?'Copying: ':'Installing: ')+R(['KERNEL32.DLL','EXPLORER.EXE','VMM32.VXD','MSHTML.DLL','NOTEPAD.EXE','PAINT.EXE','WINMINE.EXE','IEXPLORE.EXE']);
+   if(p>=100){clearInterval(iv);b.innerHTML='<div class="blue" style="background:#000;font-size:16px">Setup is now restarting your computer...</div>';setTimeout(splash,1800)}},90)}}
+setup();
+</script></body></html>
